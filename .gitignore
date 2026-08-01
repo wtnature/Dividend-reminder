@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+
+# Config (contains webhook secret)
+config/settings.yaml
+
+# Local data
+data/
+
+# OS
+.DS_Store
+Thumbs.db

@@ -1,0 +1,90 @@
+# Dividend Reminder — GitHub Actions 定时调度
+#
+# 北京时间:
+#   财报季 (3-4月, 8-9月): 每天 09:15
+#   非财报季:             每周一 09:15
+#   每日摘要:             每天 09:30
+#
+# UTC = 北京时间 - 8
+
+name: Dividend Reminder Scheduler
+
+on:
+  schedule:
+    # 每日运行 (09:15 北京时间 = 01:15 UTC)
+    # GitHub Actions cron 最小粒度 5 分钟
+    - cron: "15 1 * * *"
+
+    # 每周一运行 (09:15 北京时间 = 01:15 UTC) — 非财报季主力
+    - cron: "15 1 * * 1"
+
+    # 每日摘要 (09:30 北京时间 = 01:30 UTC)
+    - cron: "30 1 * * *"
+
+  # 也允许手动触发
+  workflow_dispatch:
+
+jobs:
+  dividend-check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout 仓库
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 安装依赖
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 初始化数据库
+        run: python src/main.py init
+
+      - name: 运行分红检查
+        env:
+          TZ: Asia/Shanghai
+        run: python src/main.py check
+
+      - name: 生成 ICS 日历
+        run: python src/main.py ics
+
+      - name: 提交更新 (如有变更)
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add data/dividend_reminder.db output/dividend.ics
+          git diff --staged --quiet || git commit -m "🤖 Auto: 更新分红数据和ICS日历 [skip ci]"
+          git push
+        continue-on-error: true
+
+  daily-summary:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    if: github.event.schedule == '30 1 * * *' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout 仓库
+        uses: actions/checkout@v4
+
+      - name: 设置 Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: 安装依赖
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: 发送每日摘要
+        env:
+          TZ: Asia/Shanghai
+        run: python src/main.py summary

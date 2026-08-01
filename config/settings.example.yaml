@@ -1,0 +1,32 @@
+# ============================================================
+# Dividend Reminder 0.6 — Configuration (Example)
+# ============================================================
+
+# --- 企业微信群机器人 Webhook URL ---
+wechat_webhook_url: "https://qyapi.weixin.qq.com/cgi-bin/webhook/send?key=YOUR_KEY"
+
+# --- 持仓默认值 ---
+portfolio:
+  default_a_share_tax_bracket: "over_1_year"
+
+# --- 轮询策略 ---
+polling:
+  earnings_season_months: [3, 4, 8, 9]
+  earnings_season_interval_hours: 24
+  off_season_interval_hours: 168
+
+# --- 汇率 ---
+exchange_rate:
+  source: "sina"
+
+# --- ICS 日历 ---
+ics:
+  advance_days: 1
+  advance_time: "20:00"
+  payment_day_time: "09:15"
+
+# --- 数据源 ---
+data_sources:
+  primary: "akshare"
+  secondary: "sina"
+  timeout_seconds: 30
